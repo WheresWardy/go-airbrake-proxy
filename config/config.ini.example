@@ -3,5 +3,11 @@ host = 0.0.0.0
 port = 6633
 
 [airbrake]
-host = api.airbrake.io
 protocol = https
+host = api.airbrake.io
+
+[statsd]
+protocol = udp
+host = 127.0.0.1
+port = 8125
+prefix = airbrakeproxy

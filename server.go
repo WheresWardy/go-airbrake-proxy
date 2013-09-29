@@ -1,15 +1,20 @@
 package main
 
 import (
+	"time"
 	"bytes"
 	"net/http"
 	"io/ioutil"
 	"code.google.com/p/gcfg"
+	"github.com/peterbourgon/g2s"
 )
 
 func main() {
 	// Load configuration into package variable Config
 	gcfg.ReadFileInto(&Config, "config/config.ini")	
+
+	// Instantiate StatsD connection
+	StatsD, _ = g2s.Dial(Config.Statsd.Protocol, Config.Statsd.Host + ":" + Config.Statsd.Port)
 
 	// Fire up an HTTP server and handle it
 	http.HandleFunc("/", httpHandler)
@@ -17,22 +22,23 @@ func main() {
 }
 
 func httpHandler(response http.ResponseWriter, request *http.Request) {
+	request_start := time.Now()
+
 	// Proxy the request
 	if request.Method == "POST" {
 		body, _ := ioutil.ReadAll(request.Body)
 
-		// Hijack so as to force close the connection
-		hijack, _ := response.(http.Hijacker)
-		connection, _, _ := hijack.Hijack()
-		defer connection.Close()
-
 		// Use a goroutine to make the Airbrake request
 		go airbrakeRequest(request.RequestURI, body)
 	}
+
+	request_diff := time.Since(request_start);
+	go StatsD.Timing(1.0, Config.Statsd.Prefix + ".http.request", request_diff)
 }
 
-
 func airbrakeRequest(requestURI string, body []byte) {
+	response_start := time.Now()
+
 	// Create the airbrake URL from configuration settings
 	airbrake_url := Config.Airbrake.Protocol + "://" + Config.Airbrake.Host + requestURI
 
@@ -43,5 +49,10 @@ func airbrakeRequest(requestURI string, body []byte) {
 	// Set headers and send request to Airbrake
 	airbrake_request.Header.Set("Content-Type", "text/xml")
 	airbrake_request.Header.Set("Connection", "close")
+
+	// Deal with Airbrake response
 	airbrake_client.Do(airbrake_request)
+
+	response_diff := time.Since(response_start)
+	go StatsD.Timing(1.0, Config.Statsd.Prefix + ".airbrake.request", response_diff)
 }

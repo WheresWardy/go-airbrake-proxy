@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"time"
 	"bytes"
 	"net/http"
@@ -11,7 +12,10 @@ import (
 
 func main() {
 	// Load configuration into package variable Config
-	gcfg.ReadFileInto(&Config, "config/config.ini")	
+	config_error := gcfg.ReadFileInto(&Config, "config/config.ini")
+	if config_error != nil {
+		log.Fatal("Could not load config file: " + config_error.Error())
+	}
 
 	// Instantiate StatsD connection
 	StatsD, _ = g2s.Dial(Config.Statsd.Protocol, Config.Statsd.Host + ":" + Config.Statsd.Port)

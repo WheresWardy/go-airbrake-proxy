@@ -18,7 +18,11 @@ func main() {
 	}
 
 	// Instantiate StatsD connection
-	StatsD, _ = g2s.Dial(Config.Statsd.Protocol, Config.Statsd.Host + ":" + Config.Statsd.Port)
+	if Config.Statsd.Host == "" {
+		StatsD = g2s.Noop()
+	} else {
+		StatsD, _ = g2s.Dial(Config.Statsd.Protocol, Config.Statsd.Host + ":" + Config.Statsd.Port)
+	}
 
 	// Fire up an HTTP server and handle it
 	http.HandleFunc("/", httpHandler)

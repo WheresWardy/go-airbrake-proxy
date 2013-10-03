@@ -1,6 +1,7 @@
 package main
 
 import (
+	"time"
 	"github.com/peterbourgon/g2s"
 )
 
@@ -12,6 +13,7 @@ type ConfigBlock struct {
 	Airbrake struct {
 		Protocol string
 		Host string
+		Timeout time.Duration
 	}
 	Statsd struct {
 		Protocol string

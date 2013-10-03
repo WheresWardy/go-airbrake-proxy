@@ -5,9 +5,10 @@ port = 6633
 [airbrake]
 protocol = https
 host = api.airbrake.io
+timeout = 10
 
 [statsd]
 protocol = udp
 host = 127.0.0.1
 port = 8125
-prefix = airbrakeproxy
+prefix = goairbrakeproxy

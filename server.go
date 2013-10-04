@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"flag"
 	"time"
 	"bytes"
 	"net/http"
@@ -13,8 +14,14 @@ import (
 )
 
 func main() {
+	// Parse command line arguments
+	var (
+		config_file = flag.String("config", "", "Path to configuration file")
+	)
+	flag.Parse()
+
 	// Load configuration into package variable Config
-	config_error := gcfg.ReadFileInto(&Config, "config/config.ini")
+	config_error := gcfg.ReadFileInto(&Config, *config_file)
 	if config_error != nil {
 		log.Fatal("Could not load config file: " + config_error.Error())
 	}
